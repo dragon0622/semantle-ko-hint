@@ -1,29 +1,52 @@
-name: Update Daily Hint
+name: Daily Hint Auto Update
 
 on:
+  # 1. 매일 새벽 1시 자동 실행 (KST 기준)
+  schedule:
+    - cron: '0 16 * * *'
+  
+  # 2. 수동으로 즉시 실행하고 싶을 때 사용
+  workflow_dispatch:
+
+  # 3. (기존 유지) 혹시나 북마클릿을 쓸 경우를 대비해 남겨둠
   repository_dispatch:
     types: [update_hint]
 
 jobs:
-  update-file:
+  update:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      
     steps:
-      - name: Checkout Code
+      - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Encode Answer and Update Data
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python_version: '3.9'
+
+      - name: Install dependencies
+        run: pip install requests
+
+      # 스케줄 실행이나 수동 실행일 때는 파이썬 스크립트로 정답 추출
+      - name: Run Python Update Script
+        if: github.event_name != 'repository_dispatch'
+        run: python update_hint.py
+
+      # (기존 로직 유지) 북마클릿 호출일 때는 전달받은 값으로 처리
+      - name: Update via Dispatch Signal
+        if: github.event_name == 'repository_dispatch'
         run: |
-          # 전달받은 정답(ans)을 Base64로 인코딩
           ENCODED_ANS=$(echo -n "${{ github.event.client_payload.ans }}" | base64)
           UPDATED_DATE=$(date +'%Y-%m-%d %H:%M:%S')
-          
-          # data.json 파일 업데이트
           echo "{\"ans\": \"$ENCODED_ANS\", \"updated\": \"$UPDATED_DATE\"}" > data.json
 
-      - name: Commit and Push Changes
+      - name: Commit and Push
         run: |
           git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@://github.com"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git add data.json
-          git commit -m "Routine hint update"
-          git push
+          # 변경사항이 있을 때만 커밋 (에러 방지)
+          git diff --quiet && git diff --staged --quiet || (git commit -m "Routine hint update" && git push)
