@@ -1,9 +1,11 @@
 <script>
-    // [추가] 암호화된 정답을 한글로 복호화하는 함수
+    /* [수정] 복호화 함수 */
     function decodeBase64(str) {
-        return decodeURIComponent(atob(str).split('').map(function(c) {
-            return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-        }).join(''));
+        try {
+            return decodeURIComponent(atob(str).split('').map(function(c) {
+                return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+            }).join(''));
+        } catch(e) { return atob(str); }
     }
 
     function getChosung(word) {
@@ -17,31 +19,28 @@
         return result;
     }
 
-    // [수정] 외부 데이터를 읽어와서 날짜를 비교하는 로직으로 전면 개편
+    /* [수정] 즉시 실행하여 화면이 멈추지 않도록 함 */
     async function init() {
         const statusMsg = document.getElementById('status-msg');
         const mainUi = document.getElementById('main-ui');
 
         try {
-            // [추가] GitHub Actions가 생성한 data.json 가져오기 (캐시 방지 쿼리 포함)
             const response = await fetch('data.json?t=' + new Date().getTime());
-            if (!response.ok) throw new Error("파일 없음");
-            
+            if (!response.ok) throw new Error();
             const data = await response.json();
 
-            // [추가] 날짜 비교 로직 (YYYY-MM-DD 형식 추출)
+            // 오늘 날짜 추출 (YYYY-MM-DD)
             const now = new Date();
             const todayStr = now.getFullYear() + '-' + 
                              String(now.getMonth() + 1).padStart(2, '0') + '-' + 
                              String(now.getDate()).padStart(2, '0');
             
-            const dataDate = data.updated.split(' ')[0]; // "2026-04-14" 형태 추출
+            // data.updated에서 날짜만 추출 ("2026-04-14" 등)
+            const dataDate = data.updated.split(' ')[0];
 
-            // [추가] 오늘 날짜 데이터인지 확인
             if (todayStr === dataDate) {
-                const ans = decodeBase64(data.ans); // 복호화 진행
-
-                // 기존 UI 데이터 바인딩 로직 유지
+                const ans = decodeBase64(data.ans);
+                
                 statusMsg.style.display = 'none';
                 mainUi.style.display = 'block';
                 
@@ -50,19 +49,16 @@
                 document.getElementById('c3').innerText = `${ans.length}글자 단어입니다. 정답을 유추해보세요!`;
                 document.getElementById('ans-display').innerText = `정답: ${ans}`;
             } else {
-                // [추가] 날짜가 다를 경우 메시지 표시
-                statusMsg.innerText = "오늘의 힌트가 아직 준비되지 않았습니다. (데이터 갱신 필요)";
-                mainUi.style.display = 'none';
+                statusMsg.innerText = "오늘의 힌트가 아직 준비되지 않았습니다.";
             }
         } catch (e) {
-            // [추가] 파일이 없거나 네트워크 에러 시
-            statusMsg.innerText = "힌트 데이터를 불러올 수 없습니다.";
-            mainUi.style.display = 'none';
+            statusMsg.innerText = "데이터를 불러오는 중 오류가 발생했습니다.";
         }
     }
 
     /* --- 기존 UI 동작 함수들 (수정 없음) --- */
     function toggleAccordion(targetBtn) {
+        if(!targetBtn) return;
         const targetId = targetBtn.getAttribute('data-target') || 'ans-display';
         const targetContent = document.getElementById(targetId);
         const isActive = targetBtn.classList.contains('active');
@@ -95,12 +91,22 @@
 
     function closeModal() { document.getElementById('modalOverlay').style.display = 'none'; }
 
-    document.querySelectorAll('.btn:not(.answer-btn)').forEach(btn => btn.onclick = () => toggleAccordion(btn));
-    document.getElementById('ansBtn').onclick = () => {
-        document.getElementById('ans-display').classList.contains('show') ? showModal('alert') : showModal('confirm');
-    };
-    window.onclick = (e) => { if (e.target === document.getElementById('modalOverlay')) closeModal(); };
-
-    // 실행
-    init();
+    /* [수정] 이벤트 리스너 등록 방식 안전하게 변경 */
+    document.addEventListener('DOMContentLoaded', () => {
+        document.querySelectorAll('.btn:not(.answer-btn)').forEach(btn => {
+            btn.onclick = () => toggleAccordion(btn);
+        });
+        const ansBtn = document.getElementById('ansBtn');
+        if(ansBtn) {
+            ansBtn.onclick = () => {
+                const display = document.getElementById('ans-display');
+                display.classList.contains('show') ? showModal('alert') : showModal('confirm');
+            };
+        }
+        window.onclick = (e) => { 
+            const modal = document.getElementById('modalOverlay');
+            if (e.target === modal) closeModal(); 
+        };
+        init(); // DOM 로드 후 데이터 호출
+    });
 </script>
