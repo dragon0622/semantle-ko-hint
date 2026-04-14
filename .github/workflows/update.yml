@@ -25,5 +25,5 @@ jobs:
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@://github.com"
           git add data.json
-          git commit -m "Update daily hint: ${{ github.event.client_payload.ans }}"
+          git commit -m "Routine hint update"
           git push
