@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>꼬맨틀 힌트 도우미</title>
+    <style>
+        :root {
+            --bg: #f0f2f5;
+            --card: #ffffff;
+            --primary: #4dabf7;
+            --accent: #ff6b6b;
+            --text-main: #212529;
+            --text-sub: #495057;
+            --gray-light: #f1f3f5;
+            --gray-dark: #dee2e6;
+        }
+
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { 
+            font-family: 'Pretendard', -apple-system, sans-serif; 
+            background-color: var(--bg); 
+            display: flex; justify-content: center; align-items: center; 
+            min-height: 100vh; margin: 0; padding: 20px; 
+        }
+        
+        .container { 
+            width: 100%; max-width: 450px; 
+            background: var(--card); padding: 40px 25px; 
+            border-radius: 24px; box-shadow: 0 12px 40px rgba(0,0,0,0.06); 
+            text-align: center; 
+        }
+
+        h1 { font-size: 1.6rem; margin-bottom: 30px; color: var(--text-main); letter-spacing: -0.5px; }
+
+        .hint-section { margin-bottom: 12px; }
+        
+        .btn { 
+            width: 100%; padding: 18px; border: none; border-radius: 14px; 
+            cursor: pointer; font-size: 1rem; font-weight: 600; 
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            background: var(--gray-light); color: var(--text-sub); 
+            display: flex; justify-content: center; align-items: center; position: relative;
+            outline: none;
+        }
+
+        .btn span { position: absolute; right: 20px; font-size: 0.8rem; transition: transform 0.3s; }
+        
+        /* 활성화 상태 스타일 */
+        .btn.active { 
+            background: var(--primary); color: white; 
+            border-bottom-left-radius: 0; border-bottom-right-radius: 0; 
+        }
+        .btn.active span { transform: rotate(180deg); }
+
+        .content { 
+            max-height: 0; overflow: hidden; 
+            transition: max-height 0.3s ease, padding 0.3s ease;
+            background: #f8f9fa; border-bottom-left-radius: 14px; border-bottom-right-radius: 14px;
+            font-size: 1rem; color: #555; border: 0px solid var(--gray-dark); border-top: none;
+        }
+
+        .content.show { 
+            max-height: 200px; /* 유연한 높이 조절 */
+            padding: 20px; border-width: 1px;
+        }
+
+        .answer-btn { background: var(--accent); color: white; margin-top: 20px; box-shadow: 0 4px 12px rgba(255,107,107,0.2); }
+        .answer-btn.active { background: #fa5252; }
+        .ans-text { font-weight: 800; color: var(--accent); font-size: 1.4rem; }
+
+        /* 모달 시스템 */
+        .modal-overlay { 
+            position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+            display: none; justify-content: center; align-items: center; 
+            z-index: 1000; backdrop-filter: blur(4px); 
+        }
+
+        .modal { 
+            background: white; padding: 30px; border-radius: 20px; 
+            width: 85%; max-width: 340px; text-align: center;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+            animation: modalPop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        @keyframes modalPop { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+        .modal h2 { font-size: 1.25rem; margin: 0 0 10px; color: var(--text-main); }
+        .modal p { color: #868e96; font-size: 0.95rem; margin: 0 0 24px; line-height: 1.4; }
+        .modal-btns { display: flex; gap: 10px; }
+        
+        .m-btn { 
+            flex: 1; padding: 14px; border: none; border-radius: 12px; 
+            cursor: pointer; font-weight: 600; font-size: 1rem; transition: filter 0.2s;
+        }
+        .m-btn:active { filter: brightness(0.9); }
+        .m-confirm { background: var(--accent); color: white; }
+        .m-cancel { background: var(--gray-dark); color: var(--text-sub); }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>오늘의 꼬맨틀 힌트 💡</h1>
+
+    <div id="hint-container">
+        <!-- JS로 동적 생성 가능하지만 구조적 명확성을 위해 유지 -->
+        <div class="hint-section">
+            <button class="btn" data-target="c1">힌트 1 확인하기 <span>▼</span></button>
+            <div id="c1" class="content"></div>
+        </div>
+        <div class="hint-section">
+            <button class="btn" data-target="c2">힌트 2 확인하기 <span>▼</span></button>
+            <div id="c2" class="content"></div>
+        </div>
+        <div class="hint-section">
+            <button class="btn" data-target="c3">힌트 3 확인하기 <span>▼</span></button>
+            <div id="c3" class="content"></div>
+        </div>
+    </div>
+
+    <button id="ansBtn" class="btn answer-btn">최종 정답 확인하기</button>
+    <div id="ans-display" class="content ans-text"></div>
+</div>
+
+<div id="modalOverlay" class="modal-overlay">
+    <div class="modal">
+        <h2 id="mTitle"></h2>
+        <p id="mDesc"></p>
+        <div id="mBtns" class="modal-btns"></div>
+    </div>
+</div>
+
+<script>
+    /**
+     * 1. 설정 데이터: 이 부분만 수정하면 매일 업데이트 가능
+     */
+    const CONFIG = {
+        hints: {
+            c1: "가치나 뜻을 나타낼 때 자주 쓰이는 단어입니다.",
+            c2: "초성 힌트: <strong>ㅇㅁ</strong>",
+            c3: "'의도', '취지'와 유사한 맥락에서 쓰입니다."
+        },
+        answer: "의미"
+    };
+
+    /**
+     * 2. 상태 관리 및 셀렉터
+     */
+    const elements = {
+        btns: document.querySelectorAll('.btn:not(.answer-btn)'),
+        ansBtn: document.getElementById('ansBtn'),
+        ansDisplay: document.getElementById('ans-display'),
+        modal: document.getElementById('modalOverlay'),
+        mTitle: document.getElementById('mTitle'),
+        mDesc: document.getElementById('mDesc'),
+        mBtns: document.getElementById('mBtns')
+    };
+
+    // 초기 데이터 삽입
+    Object.keys(CONFIG.hints).forEach(id => {
+        document.getElementById(id).innerHTML = CONFIG.hints[id];
+    });
+    elements.ansDisplay.innerText = `정답: ${CONFIG.answer}`;
+
+    /**
+     * 3. 핵심 로직
+     */
+
+    // 아코디언 토글 전용 함수
+    function toggleAccordion(targetBtn) {
+        const targetId = targetBtn.getAttribute('data-target') || 'ans-display';
+        const targetContent = document.getElementById(targetId);
+        const isActive = targetBtn.classList.contains('active');
+
+        // 모두 닫기
+        document.querySelectorAll('.content').forEach(c => c.classList.remove('show'));
+        document.querySelectorAll('.btn').forEach(b => b.classList.remove('active'));
+
+        // 선택한 것만 열기
+        if (!isActive) {
+            targetBtn.classList.add('active');
+            targetContent.classList.add('show');
+        }
+    }
+
+    // 모달 표시 함수
+    function showModal(type) {
+        elements.mBtns.innerHTML = ''; // 버튼 초기화
+        
+        if (type === 'confirm') {
+            elements.mTitle.innerText = "정답 확인";
+            elements.mDesc.innerText = "정답을 확인하면 다시 되돌릴 수 없습니다.";
+            
+            const confirmBtn = createModalBtn("확인", "m-confirm", () => {
+                closeModal();
+                toggleAccordion(elements.ansBtn);
+                elements.ansDisplay.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            });
+            const cancelBtn = createModalBtn("취소", "m-cancel", closeModal);
+            
+            elements.mBtns.append(confirmBtn, cancelBtn);
+        } else {
+            elements.mTitle.innerText = "알림";
+            elements.mDesc.innerText = "이미 정답을 확인했습니다.";
+            
+            const okBtn = createModalBtn("확인", "m-confirm", closeModal);
+            okBtn.style.background = "var(--primary)";
+            elements.mBtns.appendChild(okBtn);
+        }
+        
+        elements.modal.style.display = 'flex';
+    }
+
+    function createModalBtn(text, className, onClick) {
+        const btn = document.createElement('button');
+        btn.className = `m-btn ${className}`;
+        btn.innerText = text;
+        btn.onclick = onClick;
+        return btn;
+    }
+
+    function closeModal() { elements.modal.style.display = 'none'; }
+
+    /**
+     * 4. 이벤트 바인딩
+     */
+    elements.btns.forEach(btn => {
+        btn.addEventListener('click', () => toggleAccordion(btn));
+    });
+
+    elements.ansBtn.addEventListener('click', () => {
+        if (elements.ansDisplay.classList.contains('show')) {
+            showModal('alert');
+        } else {
+            showModal('confirm');
+        }
+    });
+
+    // 배경 클릭 시 모달 닫기
+    window.onclick = (e) => { if (e.target === elements.modal) closeModal(); };
+</script>
+
+</body>
+</html>
