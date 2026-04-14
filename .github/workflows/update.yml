@@ -12,6 +12,9 @@ on:
   repository_dispatch:
     types: [update_hint]
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
   update:
     runs-on: ubuntu-latest
