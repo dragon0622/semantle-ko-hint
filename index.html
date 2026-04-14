@@ -89,7 +89,8 @@
 
         if (ans) {
 
-            window.history.replaceState({}, document.title, window.location.pathname);
+            const cleanUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
+            window.history.replaceState({}, document.title, cleanUrl);
             
             document.getElementById('status-msg').style.display = 'none';
             document.getElementById('main-ui').style.display = 'block';
