@@ -87,6 +87,30 @@
         const urlParams = new URLSearchParams(window.location.search);
         const ans = urlParams.get('ans');
 
+        // [추가] URL에 정답이 없고 일반 접속일 경우 GitHub에서 데이터 가져오기
+        if (!ans) {
+            try {
+                // 저장된 데이터 파일 읽기 (캐시 방지를 위해 랜덤 쿼리 추가)
+                const response = await fetch('data.json?t=' + new Date().getTime());
+                if (!response.ok) throw new Error();
+                
+                const data = await response.json();
+                const today = new Date().toISOString().split('T')[0]; // 오늘 날짜 (YYYY-MM-DD)
+                const dataDate = data.updated.split(' ')[0]; // 데이터 저장 날짜
+
+                // 오늘 날짜와 데이터 날짜가 일치하는지 확인
+                if (today === dataDate) {
+                    ans = decodeBase64(data.ans); // 암호화된 정답 복호화
+                } else {
+                    statusMsg.innerText = "오늘의 힌트가 아직 준비되지 않았습니다.";
+                    return;
+                }
+            } catch (e) {
+                statusMsg.innerText = "데이터를 불러오는 중 오류가 발생했습니다.";
+                return;
+            }
+        }
+        
         if (ans) {
 
             const cleanUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
