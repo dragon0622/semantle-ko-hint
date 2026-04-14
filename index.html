@@ -88,6 +88,9 @@
         const ans = urlParams.get('ans');
 
         if (ans) {
+
+            window.history.replaceState({}, document.title, window.location.pathname);
+            
             document.getElementById('status-msg').style.display = 'none';
             document.getElementById('main-ui').style.display = 'block';
             
