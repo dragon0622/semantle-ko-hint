@@ -1,0 +1,29 @@
+name: Update Daily Hint
+
+on:
+  repository_dispatch:
+    types: [update_hint]
+
+jobs:
+  update-file:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Encode Answer and Update Data
+        run: |
+          # 전달받은 정답(ans)을 Base64로 인코딩
+          ENCODED_ANS=$(echo -n "${{ github.event.client_payload.ans }}" | base64)
+          UPDATED_DATE=$(date +'%Y-%m-%d %H:%M:%S')
+          
+          # data.json 파일 업데이트
+          echo "{\"ans\": \"$ENCODED_ANS\", \"updated\": \"$UPDATED_DATE\"}" > data.json
+
+      - name: Commit and Push Changes
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@://github.com"
+          git add data.json
+          git commit -m "Update daily hint: ${{ github.event.client_payload.ans }}"
+          git push
