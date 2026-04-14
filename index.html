@@ -1,77 +1,11 @@
-<!DOCTYPE html>
-<html lang="ko">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>꼬맨틀 힌트 도우미</title>
-    <style>
-        :root {
-            --bg: #f0f2f5;
-            --card: #ffffff;
-            --primary: #4dabf7;
-            --accent: #ff6b6b;
-            --text-main: #212529;
-            --text-sub: #495057;
-            --gray-light: #f1f3f5;
-            --gray-dark: #dee2e6;
-        }
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body { font-family: 'Pretendard', -apple-system, sans-serif; background-color: var(--bg); display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 20px; }
-        .container { width: 100%; max-width: 450px; background: var(--card); padding: 40px 25px; border-radius: 24px; box-shadow: 0 12px 40px rgba(0,0,0,0.06); text-align: center; }
-        h1 { font-size: 1.6rem; margin-bottom: 10px; color: var(--text-main); letter-spacing: -0.5px; }
-        .status-text { color: #868e96; font-size: 0.9rem; margin-bottom: 30px; }
-        .hint-section { margin-bottom: 12px; }
-        .btn { width: 100%; padding: 18px; border: none; border-radius: 14px; cursor: pointer; font-size: 1rem; font-weight: 600; transition: all 0.2s ease; background: var(--gray-light); color: var(--text-sub); display: flex; justify-content: center; align-items: center; position: relative; outline: none; }
-        .btn span { position: absolute; right: 20px; font-size: 0.8rem; transition: transform 0.3s; }
-        .btn.active { background: var(--primary); color: white; border-bottom-left-radius: 0; border-bottom-right-radius: 0; }
-        .btn.active span { transform: rotate(180deg); }
-        .content { max-height: 0; overflow: hidden; transition: max-height 0.3s ease, padding 0.3s ease; background: #f8f9fa; border-bottom-left-radius: 14px; border-bottom-right-radius: 14px; font-size: 1.1rem; color: #555; border: 0px solid var(--gray-dark); border-top: none; }
-        .content.show { max-height: 200px; padding: 20px; border-width: 1px; }
-        .answer-btn { background: var(--accent); color: white; margin-top: 20px; }
-        .ans-text { font-weight: 800; color: var(--accent); font-size: 1.4rem; }
-        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: none; justify-content: center; align-items: center; z-index: 1000; backdrop-filter: blur(4px); }
-        .modal { background: white; padding: 30px; border-radius: 20px; width: 85%; max-width: 340px; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.2); animation: modalPop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
-        @keyframes modalPop { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-        .modal h2 { font-size: 1.25rem; margin-bottom: 10px; }
-        .modal-btns { display: flex; gap: 10px; margin-top: 24px; }
-        .m-btn { flex: 1; padding: 14px; border: none; border-radius: 12px; cursor: pointer; font-weight: 600; }
-        .m-confirm { background: var(--accent); color: white; }
-        .m-cancel { background: var(--gray-dark); color: var(--text-sub); }
-    </style>
-</head>
-<body>
-
-<div class="container">
-    <h1>오늘의 꼬맨틀 힌트 💡</h1>
-    <div id="status-msg" class="status-text">꼬맨틀 사이트에서 정답을 먼저 배달해주세요.</div>
-
-    <div id="main-ui" style="display: none;">
-        <div class="hint-section">
-            <button class="btn" data-target="c1">힌트 1: 글자 수 확인 <span>▼</span></button>
-            <div id="c1" class="content"></div>
-        </div>
-        <div class="hint-section">
-            <button class="btn" data-target="c2">힌트 2: 초성 확인 <span>▼</span></button>
-            <div id="c2" class="content"></div>
-        </div>
-        <div class="hint-section">
-            <button class="btn" data-target="c3">힌트 3: 길이 힌트 <span>▼</span></button>
-            <div id="c3" class="content"></div>
-        </div>
-        <button id="ansBtn" class="btn answer-btn">최종 정답 확인하기</button>
-        <div id="ans-display" class="content ans-text"></div>
-    </div>
-</div>
-
-<div id="modalOverlay" class="modal-overlay">
-    <div class="modal">
-        <h2 id="mTitle"></h2>
-        <p id="mDesc" style="color:#868e96; font-size:0.95rem;"></p>
-        <div id="mBtns" class="modal-btns"></div>
-    </div>
-</div>
-
 <script>
+    // [추가] 암호화된 정답을 한글로 복호화하는 함수
+    function decodeBase64(str) {
+        return decodeURIComponent(atob(str).split('').map(function(c) {
+            return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+        }).join(''));
+    }
+
     function getChosung(word) {
         const cho = ["ㄱ","ㄲ","ㄴ","ㄷ","ㄸ","ㄹ","ㅁ","ㅂ","ㅃ","ㅅ","ㅆ","ㅇ","ㅈ","ㅉ","ㅊ","ㅋ","ㅌ","ㅍ","ㅎ"];
         let result = "";
@@ -83,49 +17,51 @@
         return result;
     }
 
-    function init() {
-        const urlParams = new URLSearchParams(window.location.search);
-        const ans = urlParams.get('ans');
+    // [수정] 외부 데이터를 읽어와서 날짜를 비교하는 로직으로 전면 개편
+    async function init() {
+        const statusMsg = document.getElementById('status-msg');
+        const mainUi = document.getElementById('main-ui');
 
-        // [추가] URL에 정답이 없고 일반 접속일 경우 GitHub에서 데이터 가져오기
-        if (!ans) {
-            try {
-                // 저장된 데이터 파일 읽기 (캐시 방지를 위해 랜덤 쿼리 추가)
-                const response = await fetch('data.json?t=' + new Date().getTime());
-                if (!response.ok) throw new Error();
+        try {
+            // [추가] GitHub Actions가 생성한 data.json 가져오기 (캐시 방지 쿼리 포함)
+            const response = await fetch('data.json?t=' + new Date().getTime());
+            if (!response.ok) throw new Error("파일 없음");
+            
+            const data = await response.json();
+
+            // [추가] 날짜 비교 로직 (YYYY-MM-DD 형식 추출)
+            const now = new Date();
+            const todayStr = now.getFullYear() + '-' + 
+                             String(now.getMonth() + 1).padStart(2, '0') + '-' + 
+                             String(now.getDate()).padStart(2, '0');
+            
+            const dataDate = data.updated.split(' ')[0]; // "2026-04-14" 형태 추출
+
+            // [추가] 오늘 날짜 데이터인지 확인
+            if (todayStr === dataDate) {
+                const ans = decodeBase64(data.ans); // 복호화 진행
+
+                // 기존 UI 데이터 바인딩 로직 유지
+                statusMsg.style.display = 'none';
+                mainUi.style.display = 'block';
                 
-                const data = await response.json();
-                const today = new Date().toISOString().split('T')[0]; // 오늘 날짜 (YYYY-MM-DD)
-                const dataDate = data.updated.split(' ')[0]; // 데이터 저장 날짜
-
-                // 오늘 날짜와 데이터 날짜가 일치하는지 확인
-                if (today === dataDate) {
-                    ans = decodeBase64(data.ans); // 암호화된 정답 복호화
-                } else {
-                    statusMsg.innerText = "오늘의 힌트가 아직 준비되지 않았습니다.";
-                    return;
-                }
-            } catch (e) {
-                statusMsg.innerText = "데이터를 불러오는 중 오류가 발생했습니다.";
-                return;
+                document.getElementById('c1').innerHTML = `이 단어는 총 <b>${ans.length}글자</b>입니다.`;
+                document.getElementById('c2').innerHTML = `초성 힌트: <b>${getChosung(ans)}</b>`;
+                document.getElementById('c3').innerText = `${ans.length}글자 단어입니다. 정답을 유추해보세요!`;
+                document.getElementById('ans-display').innerText = `정답: ${ans}`;
+            } else {
+                // [추가] 날짜가 다를 경우 메시지 표시
+                statusMsg.innerText = "오늘의 힌트가 아직 준비되지 않았습니다. (데이터 갱신 필요)";
+                mainUi.style.display = 'none';
             }
-        }
-        
-        if (ans) {
-
-            const cleanUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
-            window.history.replaceState({}, document.title, cleanUrl);
-            
-            document.getElementById('status-msg').style.display = 'none';
-            document.getElementById('main-ui').style.display = 'block';
-            
-            document.getElementById('c1').innerHTML = `이 단어는 총 <b>${ans.length}글자</b>입니다.`;
-            document.getElementById('c2').innerHTML = `초성 힌트: <b>${getChosung(ans)}</b>`;
-            document.getElementById('c3').innerText = `${ans.length}글자 단어입니다. 정답을 유추해보세요!`;
-            document.getElementById('ans-display').innerText = `정답: ${ans}`;
+        } catch (e) {
+            // [추가] 파일이 없거나 네트워크 에러 시
+            statusMsg.innerText = "힌트 데이터를 불러올 수 없습니다.";
+            mainUi.style.display = 'none';
         }
     }
 
+    /* --- 기존 UI 동작 함수들 (수정 없음) --- */
     function toggleAccordion(targetBtn) {
         const targetId = targetBtn.getAttribute('data-target') || 'ans-display';
         const targetContent = document.getElementById(targetId);
@@ -165,7 +101,6 @@
     };
     window.onclick = (e) => { if (e.target === document.getElementById('modalOverlay')) closeModal(); };
 
+    // 실행
     init();
 </script>
-</body>
-</html>
