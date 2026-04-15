@@ -33,7 +33,7 @@ jobs:
       - name: Install dependencies
         run: |
           pip install --upgrade pip
-          pip install -U requests google-generativeai
+          pip install -U requests google-genai
 
       # 스케줄 실행이나 수동 실행일 때는 파이썬 스크립트로 정답 추출
       - name: Run Python Update Script
