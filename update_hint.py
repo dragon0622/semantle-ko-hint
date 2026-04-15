@@ -9,7 +9,7 @@ def get_ai_hints(answer_word):
     
     api_key = os.environ.get("GEMINI_API_KEY")
     if not api_key:
-        return {"level1": "API 키가 설정되지 않았습니다.", "level2": "...", "level3": "..."}
+        return {"level1": "API 키가 설정되지 않았습니다.", "level2": "..."}
 
     client = Client(api_key=api_key)
 
@@ -22,20 +22,18 @@ def get_ai_hints(answer_word):
 
 [출력 규칙]
 1. 정답 단어를 힌트 내용에 절대 직접적으로 언급하지 마세요.
-2. 아래의 3단계 구조에 맞춰 한국어로 작성하세요.
+2. 아래의 구조에 맞춰 한국어로 작성하세요.
 3. 반드시 JSON 형식으로만 응답하세요.
 4. 반드시 30자 이내로 작성하세요.
 
 [힌트 단계별 가이드라인]
 level1 (추상적): 단어의 본질, 철학적 의미, 혹은 그것이 세상에 없다면 어떨지에 대한 은유적인 묘사. (가장 어려움)
-level2 (상황적): 이 단어와 관련된 일상적인 풍경, 사람들이 이 물건/행동을 할 때 내는 소리나 취하는 포즈, 느껴지는 감각 묘사.
-level3 (언어적): 단어의 글자 수와 초성 힌트, 혹은 이 단어가 포함된 아주 유명한 속담, 관용구, 노래 가사, 영화 제목 등을 활용한 결정적 단서.
+level2 (언어적): 이 단어가 포함된 아주 유명한 속담, 관용구, 노래 가사, 영화 제목 등을 활용한 결정적 단서.
 
 [응답 형식]
 {{
 "level1": "...",
-"level2": "...",
-"level3": "..."
+"level2": "..."
 }}
 """
 
@@ -49,7 +47,7 @@ level3 (언어적): 단어의 글자 수와 초성 힌트, 혹은 이 단어가 
         return json.loads(clean_text)
     except Exception as e:
         print(f"AI 생성 중 오류: {e}")
-        return {"level1": "AI 힌트를 생성할 수 없습니다.", "level2": "서버 통신 오류", "level3": "잠시 후 시도해주세요."}
+        return {"level1": "AI 힌트를 생성할 수 없습니다.", "level2": "서버 통신 오류"}
 
                 
 def get_hint():
@@ -75,8 +73,7 @@ def get_hint():
             "ans": encoded_ans,
             "updated": kst_now.strftime("%Y-%m-%d %H:%M:%S"),
             "level1": hints.get('level1'),
-            "level2": hints.get('level2'),
-            "level3": hints.get('level3')
+            "level2": hints.get('level2')
         }
 
         with open("data.json", "w", encoding="utf-8") as f:
