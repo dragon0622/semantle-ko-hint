@@ -1,5 +1,7 @@
 # 💡 꼬맨틀 힌트 도우미 `v0.2`
 
+[업데이트_일지📃](https://github.com/dragon0622/semantle-ko-hint/wiki/%EC%97%85%EB%8D%B0%EC%9D%B4%ED%8A%B8-%EC%9D%BC%EC%A7%80)
+
 ## 🔗 사이트 주소
 [https://dragon0622.github.io/semantle-ko-hint/](https://dragon0622.github.io/semantle-ko-hint/)
 
