@@ -117,9 +117,12 @@
                 statusMsg.style.display = 'none';
                 mainUi.style.display = 'block';
                 
-                document.getElementById('c1').innerHTML = `이 단어는 총 <b>${ans.length}글자</b>입니다.`;
-                document.getElementById('c2').innerHTML = `초성 힌트: <b>${getChosung(ans)}</b>`;
-                document.getElementById('c3').innerText = `${ans.length}글자 단어입니다. 정답을 유추해보세요!`;
+                // document.getElementById('c1').innerHTML = `이 단어는 총 <b>${ans.length}글자</b>입니다.`;
+                // document.getElementById('c2').innerHTML = `초성 힌트: <b>${getChosung(ans)}</b>`;
+                // document.getElementById('c3').innerText = `${ans.length}글자 단어입니다. 정답을 유추해보세요!`;
+                document.getElementById('c1').innerText = data.level1;
+                document.getElementById('c2').innerText = data.level2;
+                document.getElementById('c3').innerText = data.level3;
                 document.getElementById('ans-display').innerText = `정답: ${ans}`;
             } else {
                 // [추가] 날짜가 다를 경우 안내 문구
