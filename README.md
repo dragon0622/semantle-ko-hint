@@ -1,4 +1,4 @@
-# 💡 꼬맨틀 힌트 도우미 `v0.1`
+# 💡 꼬맨틀 힌트 도우미 `v0.2`
 
 ## 🔗 사이트 주소
 [https://dragon0622.github.io/semantle-ko-hint/](https://dragon0622.github.io/semantle-ko-hint/)
