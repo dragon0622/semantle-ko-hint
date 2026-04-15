@@ -39,6 +39,16 @@ def get_ai_hints(answer_word):
             "level3": "..."
             }}
             """
+
+                try:
+        response = model.generate_content(prompt)
+        
+        clean_text = response.text.replace('```json', '').replace('```', '').strip()
+        return json.loads(clean_text)
+    except Exception as e:
+        print(f"AI 생성 중 오류: {e}")
+        return {"level1": "AI 힌트를 생성할 수 없습니다.", "level2": "서버 통신 오류", "level3": "잠시 후 시도해주세요."}
+
                 
 def get_hint():
     try:
