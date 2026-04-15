@@ -31,11 +31,13 @@ jobs:
           python-version: '3.9'
 
       - name: Install dependencies
-        run: pip install requests
+        run: pip install requests google-generativeai
 
       # 스케줄 실행이나 수동 실행일 때는 파이썬 스크립트로 정답 추출
       - name: Run Python Update Script
         if: github.event_name != 'repository_dispatch'
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: python update_hint.py
 
       # (기존 로직 유지) 북마클릿 호출일 때는 전달받은 값으로 처리
