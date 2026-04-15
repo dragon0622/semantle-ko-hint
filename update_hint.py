@@ -3,7 +3,7 @@ import base64
 import json
 import os
 from datetime import datetime, timedelta
-from genai import Client
+from google.genai import Client
 
 def get_ai_hints(answer_word):
     
@@ -41,7 +41,7 @@ level3 (언어적): 단어의 글자 수와 초성 힌트, 혹은 이 단어가 
 
     try:
         response = client.models.generate_content(
-            model='gemini-2.5-flash',
+            model='gemini-1.5-flash',
             contents=prompt
         )
         
