@@ -3,7 +3,7 @@ import base64
 import json
 import os
 from datetime import datetime, timedelta
-import google.generativeai as genai
+from google import genai
 
 def get_ai_hints(answer_word):
     
@@ -11,9 +11,7 @@ def get_ai_hints(answer_word):
     if not api_key:
         return {"level1": "API 키가 설정되지 않았습니다.", "level2": "...", "level3": "..."}
 
-    genai.configure(api_key=api_key)
-    
-    model = genai.GenerativeModel('gemini-2.5-flash')
+    client = genai.Client(api_key=api_key)
 
     prompt = f"""
 [시스템 설정]
@@ -26,6 +24,7 @@ def get_ai_hints(answer_word):
 1. 정답 단어를 힌트 내용에 절대 직접적으로 언급하지 마세요.
 2. 아래의 3단계 구조에 맞춰 한국어로 작성하세요.
 3. 반드시 JSON 형식으로만 응답하세요.
+4. 반드시 30자 이내로 작성하세요.
 
 [힌트 단계별 가이드라인]
 level1 (추상적): 단어의 본질, 철학적 의미, 혹은 그것이 세상에 없다면 어떨지에 대한 은유적인 묘사. (가장 어려움)
@@ -41,7 +40,10 @@ level3 (언어적): 단어의 글자 수와 초성 힌트, 혹은 이 단어가 
 """
 
     try:
-        response = model.generate_content(prompt)
+        response = client.models.generate_content(
+            model='gemini-2.5-flash',
+            contents=prompt
+        )
         
         clean_text = response.text.replace('```json', '').replace('```', '').strip()
         return json.loads(clean_text)
