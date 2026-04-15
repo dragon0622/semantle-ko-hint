@@ -3,7 +3,7 @@ import base64
 import json
 import os
 from datetime import datetime, timedelta
-from google import genai
+from genai import Client
 
 def get_ai_hints(answer_word):
     
