@@ -11,7 +11,7 @@ def get_ai_hints(answer_word):
     if not api_key:
         return {"level1": "API 키가 설정되지 않았습니다.", "level2": "...", "level3": "..."}
 
-    client = genai.Client(api_key=api_key)
+    client = Client(api_key=api_key)
 
     prompt = f"""
 [시스템 설정]
